@@ -3,7 +3,7 @@ import hashlib
 import random
 import string
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 app = FastAPI()
 
@@ -29,6 +29,14 @@ class CodeRequest(BaseModel):
 class PriceUpdate(BaseModel):
     """Schema for updating token price."""
     price: int
+
+    @field_validator("price")
+    @classmethod
+    def price_must_be_positive(cls, v):
+        """Ensure price is at least 1 to prevent division by zero."""
+        if v < 1:
+            raise ValueError("price must be at least 1")
+        return v
 
 
 @app.post("/buy")
@@ -77,6 +85,8 @@ def get_price():
 @app.post("/price")
 def set_price(payload: PriceUpdate):
     """Admin endpoint to update the token price."""
+    if payload.price < 1:
+        raise HTTPException(status_code=422, detail="price must be at least 1")
     global token_price
     token_price = payload.price
     return {"price": token_price}

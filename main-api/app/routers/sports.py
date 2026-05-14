@@ -1,11 +1,12 @@
 """Sport data endpoint with query parameter support."""
 from typing import Optional
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.olympic_event import OlympicEvent
 from app.utils.response_format import format_response
 from app.utils.token_dep import consume_token, deduct_token
+from app.utils.cache import get_cached, store_cache
 
 router = APIRouter()
 
@@ -13,6 +14,7 @@ router = APIRouter()
 @router.get("/sport/{sport_name}")
 def get_sport(
     sport_name: str,
+    request: Request,
     fmt: str = Query(default="json"),
     country: Optional[str] = Query(default=None),
     year: Optional[int] = Query(default=None),
@@ -21,12 +23,24 @@ def get_sport(
     db: Session = Depends(get_db),
     user=Depends(consume_token),
 ):
-    """Return Olympic results for a sport with optional filters."""
+    """Return Olympic results for a sport with optional filters.
+
+    First checks the cache. If the data is already stored, we return it immediately without touching the database.
+    If not found in the cache, we query the database and then store the result
+    in the cache for next time.
+    """
+
+    cache_key = f"{request.url.path}?{request.url.query}"
+
+    cached_data = get_cached(cache_key)
+    if cached_data is not None:
+        deduct_token(user, db)
+        return format_response(cached_data, fmt)
+
     search = sport_name.replace("-", " ")
     query = db.query(OlympicEvent).filter(
         OlympicEvent.sport.ilike(f"%{search}%")
     )
-
     if country:
         query = query.filter(OlympicEvent.noc == country.upper())
     if year:
@@ -40,7 +54,12 @@ def get_sport(
             query = query.filter(OlympicEvent.medal.ilike(medals))
 
     rows = query.all()
+
+    if not rows:
+        raise HTTPException(status_code=404, detail="Sport not found")
+
     deduct_token(user, db)
+
     results = [
         {
             "name": r.name,
@@ -52,17 +71,18 @@ def get_sport(
         for r in rows
     ]
 
-    return format_response(
-        {
-            "sport": sport_name.replace("-", " ").title(),
-            "filters": {
-                "country": country,
-                "year": year,
-                "season": season,
-                "medals": medals,
-            },
-            "count": len(results),
-            "results": results,
+    data = {
+        "sport": sport_name.replace("-", " ").title(),
+        "filters": {
+            "country": country,
+            "year": year,
+            "season": season,
+            "medals": medals,
         },
-        fmt,
-    )
+        "count": len(results),
+        "results": results,
+    }
+
+    store_cache(cache_key, data)
+
+    return format_response(data, fmt)
