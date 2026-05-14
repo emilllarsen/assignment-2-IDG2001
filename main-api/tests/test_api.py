@@ -1,6 +1,3 @@
-"""API endpoint integration tests."""
-
-
 class TestUsers:
     def test_create_user(self, client):
         response = client.post("/v2/user", json={

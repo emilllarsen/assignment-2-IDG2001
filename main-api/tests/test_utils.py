@@ -1,5 +1,3 @@
-"""Unit tests for helper functions."""
-
 import pytest
 from app.seed import clean_float, clean_int, clean_str
 
