@@ -1,8 +1,9 @@
 """Athlete data endpoint."""
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.olympic_event import OlympicEvent
+from app.utils.response_format import format_response
 from app.utils.token_dep import consume_token
 
 router = APIRouter()
@@ -11,6 +12,7 @@ router = APIRouter()
 @router.get("/athlete/{name}")
 def get_athlete(
     name: str,
+    fmt: str = Query(default="json"),
     db: Session = Depends(get_db),
     user=Depends(consume_token),
 ):
@@ -36,4 +38,6 @@ def get_athlete(
         for r in rows
     ]
 
-    return {"athlete": name, "count": len(results), "results": results}
+    return format_response(
+        {"athlete": name, "count": len(results), "results": results}, fmt
+    )
