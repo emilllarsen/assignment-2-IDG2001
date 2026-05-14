@@ -78,46 +78,75 @@ class TestTokens:
 
 class TestDataEndpoints:
     def test_get_athlete_returns_data(self, client):
-        create = client.post("/v2/user", json={
-            "email": "data@test.com", "password": "secret123",
+        # All data endpoints need a user with tokens, so we make one first
+        create_response = client.post("/v2/user", json={
+            "email": "data@test.com",
+            "password": "secret123",
         })
-        user_id = create.json()["id"]
-        resp = client.get(
-            "/v2/athlete/Usain-Bolt", headers={"X-User-Id": user_id}
+        user_id = create_response.json()["id"]
+
+        # 2 Usain Bolt records are seeded in conftest.py
+        response = client.get(
+            "/v2/athlete/Usain-Bolt",
+            headers={"X-User-Id": user_id},
         )
-        assert resp.status_code == 200
-        assert resp.json()["count"] == 2
-        assert resp.json()["results"][0]["noc"] == "JAM"
+
+        assert response.status_code == 200
+        assert response.json()["count"] == 2
+        assert response.json()["results"][0]["noc"] == "JAM"
 
     def test_get_country_returns_data(self, client):
-        create = client.post("/v2/user", json={
-            "email": "country@test.com", "password": "secret123",
+        # All data endpoints need a user with tokens, so we make one first
+        create_response = client.post("/v2/user", json={
+            "email": "country@test.com",
+            "password": "secret123",
         })
-        user_id = create.json()["id"]
-        resp = client.get(
-            "/v2/country/NOR", headers={"X-User-Id": user_id}
+        user_id = create_response.json()["id"]
+
+        # A Norwegian skier is seeded in conftest.py
+        response = client.get(
+            "/v2/country/NOR",
+            headers={"X-User-Id": user_id},
         )
-        assert resp.status_code == 200
-        assert "Skiing" in resp.json()["sports"]
+
+        response_body = response.json()
+
+        assert response.status_code == 200
+        assert "Skiing" in response_body["sports"]
 
     def test_get_sport_returns_data(self, client):
-        create = client.post("/v2/user", json={
-            "email": "sport@test.com", "password": "secret123",
+        # All data endpoints need a user with tokens, so we make one first
+        create_response = client.post("/v2/user", json={
+            "email": "sport@test.com",
+            "password": "secret123",
         })
-        user_id = create.json()["id"]
-        resp = client.get(
-            "/v2/sport/Athletics", headers={"X-User-Id": user_id}
+        user_id = create_response.json()["id"]
+
+        # 2 Athletics records are seeded in conftest.py
+        response = client.get(
+            "/v2/sport/Athletics",
+            headers={"X-User-Id": user_id},
         )
-        assert resp.status_code == 200
-        assert resp.json()["count"] == 2
+
+        assert response.status_code == 200
+        assert response.json()["count"] == 2
 
     def test_athlete_not_found_does_not_deduct_token(self, client):
-        create = client.post("/v2/user", json={
-            "email": "nodeduce@test.com", "password": "secret123",
+        # Create a user with the default 10 tokens
+        create_response = client.post("/v2/user", json={
+            "email": "nodeduce@test.com",
+            "password": "secret123",
         })
-        user_id = create.json()["id"]
+        user_id = create_response.json()["id"]
+
+        # Search for an athlete that does not exist
         client.get(
-            "/v2/athlete/nobody-ever", headers={"X-User-Id": user_id}
+            "/v2/athlete/nobody-ever",
+            headers={"X-User-Id": user_id},
         )
-        resp = client.get(f"/v2/user/{user_id}")
-        assert resp.json()["tokens"] == 10
+
+        # Tokens should still be 10, we do not charge for failed requests
+        user_response = client.get(f"/v2/user/{user_id}")
+        token_count = user_response.json()["tokens"]
+
+        assert token_count == 10
