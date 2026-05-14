@@ -8,12 +8,12 @@ from pydantic import BaseModel
 app = FastAPI()
 
 # the folder where CSV log files are stored as a docker volume
-LOG_DIR = "/logs"
+LOG_DIR = "/log_entries"
 
 # primary in-memory data structure, all log entries live here first
-logs = []
+log_entries = []
 
-# how many entries from logs have already been written to the CSV file.
+# how many entries from log_entries have already been written to the CSV file.
 # use this to avoid re-writing entries that are already on disk.
 flush_index = 0
 
@@ -30,11 +30,11 @@ class LogEntry(BaseModel):
 
 class RetentionUpdate(BaseModel):
     """Schema for changing the retention period."""
-    n: int
+    days: int
 
 
 def get_log_path(date: datetime) -> str:
-    """Return the file path for a given date, e.g, /logs/2024-05-14.csv"""
+    """Return the file path for a given date, e.g, /log_entries/2024-05-14.csv"""
     return os.path.join(LOG_DIR, date.strftime("%Y-%m-%d") + ".csv")
 
 
@@ -56,7 +56,7 @@ def flush_to_file():
     """Write new entries from memory to today's CSV file."""
     global flush_index
 
-    new_entries = logs[flush_index:]
+    new_entries = log_entries[flush_index:]
     if not new_entries:
         return
 
@@ -72,20 +72,20 @@ def flush_to_file():
             writer.writeheader()
         writer.writerows(new_entries)
 
-    flush_index = len(logs)
+    flush_index = len(log_entries)
 
 
 @app.post("/log")
 def add_log(payload: LogEntry):
     """Log a request and save it to the CSV file."""
-    entry = {
+    log_entry = {
         "time": datetime.now().isoformat(),
         "username": payload.username,
         "endpoint": payload.endpoint,
         "tokens": payload.tokens,
     }
 
-    logs.append(entry)  # store in the primary data structure first
+    log_entries.append(log_entry)  # store in the primary data structure first
     flush_to_file()  # write any entries that havent been written to disk yet
 
     return {"message": "Logged"}
@@ -96,8 +96,8 @@ def get_log():
     """Return all log entries stored in memory."""
     return {
         "date": datetime.now().strftime("%Y-%m-%d"),
-        "count": len(logs),
-        "entries": logs,
+        "count": len(log_entries),
+        "entries": log_entries,
     }
 
 
@@ -109,8 +109,8 @@ def get_retention():
 
 @app.post("/retention")
 def set_retention(payload: RetentionUpdate):
-    """Update how many days of logs to keep and delete files that are now too old."""
+    """Update how many days of log_entries to keep and delete files that are now too old."""
     global retention_days
-    retention_days = payload.n
+    retention_days = payload.days
     delete_old_files()
     return {"n": retention_days}

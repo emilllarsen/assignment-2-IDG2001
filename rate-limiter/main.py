@@ -6,7 +6,7 @@ from pydantic import BaseModel
 app = FastAPI()
 
 # stores a list of request timestamps per user
-request_log = {}
+user_requests = {}
 
 
 class RequestLog(BaseModel):
@@ -18,17 +18,17 @@ class RequestLog(BaseModel):
 def add_request(user_id: str, payload: RequestLog):
     """Log a new request for a user."""
     current_time = datetime.now()
-    if user_id not in request_log:
-        request_log[user_id] = []
+    if user_id not in user_requests:
+        user_requests[user_id] = []
 
-    request_log[user_id].append(current_time)
+    user_requests[user_id].append(current_time)
 
     cutoff_time = current_time - timedelta(seconds=10)  # clean out entries older than 10 seconds
     recent_requests = []
-    for timestamp in request_log[user_id]:
+    for timestamp in user_requests[user_id]:
         if timestamp > cutoff_time:
             recent_requests.append(timestamp)
-    request_log[user_id] = recent_requests
+    user_requests[user_id] = recent_requests
 
     return {"message": "Request logged"}
 
@@ -38,17 +38,17 @@ def get_requests(user_id: str):
     """Return request count and delay for a user."""
     current_time = datetime.now()
 
-    if user_id not in request_log:
+    if user_id not in user_requests:
         return {"requests": 0, "delay": 0.0}
 
     cutoff_time = current_time - timedelta(seconds=10)
     recent_requests = []
-    for timestamp in request_log[user_id]:
+    for timestamp in user_requests[user_id]:
         if timestamp > cutoff_time:
             recent_requests.append(timestamp)
-    request_log[user_id] = recent_requests
+    user_requests[user_id] = recent_requests
 
-    request_count = len(request_log[user_id])
+    request_count = len(user_requests[user_id])
     delay = 0.0
 
     if request_count > 10:
