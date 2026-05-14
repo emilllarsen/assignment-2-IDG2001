@@ -17,7 +17,7 @@ def create_event(
     user=Depends(consume_token),
 ):
     """Create a new athlete participation record."""
-    event = OlympicEvent(
+    new_event = OlympicEvent(
         name=payload.name,
         sex=payload.sex,
         age=payload.age,
@@ -33,9 +33,9 @@ def create_event(
         event=payload.event,
         medal=payload.medal,
     )
-    db.add(event)
+    db.add(new_event)
     db.commit()
-    db.refresh(event)
+    db.refresh(new_event)
     deduct_token(user, db)
 
-    return {"message": "Event created", "id": event.id}
+    return {"message": "Event created", "id": new_event.id}

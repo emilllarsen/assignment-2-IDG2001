@@ -17,26 +17,26 @@ def get_athlete(
     user=Depends(consume_token),
 ):
     """Return all Olympic results for an athlete."""
-    search = name.replace("-", " ")
-    rows = db.query(OlympicEvent).filter(
-        OlympicEvent.name.ilike(f"%{search}%")
+    search_name = name.replace("-", " ")
+    matching_records = db.query(OlympicEvent).filter(
+        OlympicEvent.name.ilike(f"%{search_name}%")
     ).all()
 
-    if not rows:
+    if not matching_records:
         raise HTTPException(status_code=404, detail="Athlete not found")
 
     deduct_token(user, db)
     results = [
         {
-            "name": r.name,
-            "sport": r.sport,
-            "event": r.event,
-            "year": r.year,
-            "city": r.city,
-            "noc": r.noc,
-            "medal": r.medal,
+            "name": record.name,
+            "sport": record.sport,
+            "event": record.event,
+            "year": record.year,
+            "city": record.city,
+            "noc": record.noc,
+            "medal": record.medal,
         }
-        for r in rows
+        for record in matching_records
     ]
 
     return format_response(

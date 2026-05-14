@@ -18,26 +18,26 @@ def get_country(
 ):
     """Return medal summary for a country grouped by sport."""
     noc = noc.upper()
-    rows = db.query(OlympicEvent).filter(OlympicEvent.noc == noc).all()
+    matching_records = db.query(OlympicEvent).filter(OlympicEvent.noc == noc).all()
 
-    if not rows:
+    if not matching_records:
         raise HTTPException(status_code=404, detail="Country not found")
 
     deduct_token(user, db)
-    sports = {}
-    for row in rows:
-        sport = row.sport
-        if sport not in sports:
-            sports[sport] = {
+    sports_summary = {}
+    for record in matching_records:
+        sport_name = record.sport
+        if sport_name not in sports_summary:
+            sports_summary[sport_name] = {
                 "gold": 0, "silver": 0, "bronze": 0,
                 "participations": 0,
             }
-        sports[sport]["participations"] += 1
-        if row.medal == "Gold":
-            sports[sport]["gold"] += 1
-        elif row.medal == "Silver":
-            sports[sport]["silver"] += 1
-        elif row.medal == "Bronze":
-            sports[sport]["bronze"] += 1
+        sports_summary[sport_name]["participations"] += 1
+        if record.medal == "Gold":
+            sports_summary[sport_name]["gold"] += 1
+        elif record.medal == "Silver":
+            sports_summary[sport_name]["silver"] += 1
+        elif record.medal == "Bronze":
+            sports_summary[sport_name]["bronze"] += 1
 
-    return format_response({"noc": noc, "sports": sports}, fmt)
+    return format_response({"noc": noc, "sports": sports_summary}, fmt)
