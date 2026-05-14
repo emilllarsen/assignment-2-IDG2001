@@ -34,38 +34,38 @@ class PriceUpdate(BaseModel):
 @app.post("/buy")
 def buy_tokens(payload: BuyRequest):
     """Buy tokens with money. Returns a secret code."""
-    tokens = payload.money // token_price
+    tokens_to_give = payload.money // token_price
 
-    random_str = ''.join(
+    random_characters = ''.join(
         random.choices(string.ascii_letters + string.digits, k=32)
     )
-    secret = hashlib.sha256(random_str.encode()).hexdigest()
+    secret_code = hashlib.sha256(random_characters.encode()).hexdigest()
 
-    purchases[secret] = {
+    purchases[secret_code] = {
         "username": payload.username,
-        "tokens": tokens,
+        "tokens": tokens_to_give,
         "used": False,
     }
 
-    return {"secret": secret}
+    return {"secret": secret_code}
 
 
 @app.post("/verify")
 def verify_code(payload: CodeRequest):
     """Verify a secret code. Returns tokens. One-time use."""
-    purchase = purchases.get(payload.code)
+    existing_purchase = purchases.get(payload.code)
 
-    if not purchase:
+    if not existing_purchase:
         raise HTTPException(status_code=404, detail="Invalid code")
 
-    if purchase["used"]:
+    if existing_purchase["used"]:
         raise HTTPException(
             status_code=400, detail="Code already used"
         )
 
-    purchase["used"] = True
+    existing_purchase["used"] = True
 
-    return {"tokens": purchase["tokens"]}
+    return {"tokens": existing_purchase["tokens"]}
 
 
 @app.get("/price")
