@@ -29,10 +29,10 @@ def consume_token(
             f"{RATE_LIMITER_URL}/{x_user_id}",
             json={"username": user.email},
         )
-        resp = httpx.get(f"{RATE_LIMITER_URL}/{x_user_id}")
-        data = resp.json()
-        if data["delay"] > 0:
-            time.sleep(data["delay"])
+        rate_limiter_response = httpx.get(f"{RATE_LIMITER_URL}/{x_user_id}")
+        rate_limiter_data = rate_limiter_response.json()
+        if rate_limiter_data["delay"] > 0:
+            time.sleep(rate_limiter_data["delay"])
     except httpx.ConnectError:
         pass
 
