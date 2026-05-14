@@ -70,7 +70,9 @@ def clean_float(val):
 def clean_int(val):
     """Convert a value to int, returning None for NaN or missing."""
     float_value = clean_float(val)
-    return int(float_value) if float_value is not None else None
+    if float_value is not None:
+        return int(float_value)
+    return None
 
 
 def clean_str(val):
@@ -78,4 +80,6 @@ def clean_str(val):
     if val is None or (isinstance(val, float) and pd.isna(val)):
         return None
     cleaned_string = str(val).strip()
-    return cleaned_string if cleaned_string and cleaned_string.lower() != "nan" else None
+    if cleaned_string and cleaned_string.lower() != "nan":
+        return cleaned_string
+    return None
