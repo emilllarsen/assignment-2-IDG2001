@@ -41,7 +41,7 @@ class PriceUpdate(BaseModel):
 
 @app.post("/buy")
 def buy_tokens(payload: BuyRequest):
-    """Buy tokens with money. Returns a secret code"""
+    """Buy tokens with money. Returns a secret code."""
     # int division. 10 money at price of 2 gives 5 tokens
     tokens_to_give = payload.money // token_price
 
@@ -64,7 +64,6 @@ def buy_tokens(payload: BuyRequest):
 @app.post("/verify")
 def verify_code(payload: CodeRequest):
     """Check if a secret code is valid and return how many tokens it is worth."""
-    
     # look up the secret code in the purchases above
     existing_purchase = purchases.get(payload.code)
 
@@ -78,7 +77,7 @@ def verify_code(payload: CodeRequest):
             status_code=400, detail="Code already used"
         )
 
-    # mark the code as used so it cant be redeemed again 
+    # mark the code as used so it cant be redeemed again
     existing_purchase["used"] = True
 
     return {"tokens": existing_purchase["tokens"]}
