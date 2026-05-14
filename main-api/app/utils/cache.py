@@ -13,10 +13,10 @@ def get_cached(endpoint: str):
     main-api just falls back to querying the database as normal.
     """
     try:
-        resp = httpx.get(f"{CACHE_URL}/cache", params={"endpoint": endpoint})
-        result = resp.json()
-        if result["hit"]:
-            return result["data"]
+        cache_response = httpx.get(f"{CACHE_URL}/cache", params={"endpoint": endpoint})
+        cache_result = cache_response.json()
+        if cache_result["hit"]:
+            return cache_result["data"]
     except httpx.ConnectError:
         pass
     return None
