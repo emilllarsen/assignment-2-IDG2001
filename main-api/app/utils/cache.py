@@ -1,8 +1,8 @@
 """Helper functions for talking to the cache service."""
 import httpx
 
-# The address of the cache container inside Docker's network
-CACHE_URL = "http://cache:8003"
+
+CACHE_URL = "http://cache:8003" #the address of the cache container inside Docker's network
 
 
 def get_cached(endpoint: str):

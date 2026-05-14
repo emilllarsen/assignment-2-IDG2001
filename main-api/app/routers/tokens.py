@@ -46,8 +46,5 @@ def redeem_tokens(
     return {
         "user_id": user.id,
         "tokens": user.tokens,
-        "message": (
-            f"Added {tokens_to_add} tokens."
-            f" New balance: {user.tokens}"
-        ),
+        "message": f"Added {tokens_to_add} tokens. New balance: {user.tokens}",
     }

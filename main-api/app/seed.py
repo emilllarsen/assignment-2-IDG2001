@@ -44,7 +44,7 @@ def seed_database():
             )
             records.append(record)
 
-        chunk_size = 5000
+        chunk_size = 5000  #insert in chunks, doing it all at once uses too much memory
         for i in range(0, len(records), chunk_size):
             db.bulk_save_objects(records[i:i + chunk_size])
             db.commit()
@@ -70,7 +70,9 @@ def clean_float(val):
 def clean_int(val):
     """Convert a value to int, returning None for NaN or missing."""
     float_value = clean_float(val)
-    return int(float_value) if float_value is not None else None
+    if float_value is not None:
+        return int(float_value)
+    return None
 
 
 def clean_str(val):
@@ -78,4 +80,6 @@ def clean_str(val):
     if val is None or (isinstance(val, float) and pd.isna(val)):
         return None
     cleaned_string = str(val).strip()
-    return cleaned_string if cleaned_string and cleaned_string.lower() != "nan" else None
+    if cleaned_string and cleaned_string.lower() != "nan":
+        return cleaned_string
+    return None
