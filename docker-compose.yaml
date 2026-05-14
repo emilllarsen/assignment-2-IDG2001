@@ -3,3 +3,20 @@ services:
     build: ./main-api
     ports:
       - "8000:8000"
+    volumes:
+      - dataset:/app/app/data
+      - logs:/app/logs
+
+  token-shop:
+    build: ./token-shop
+    ports:
+      - "8001:8001"
+
+  rate-limiter:
+    build: ./rate-limiter
+    ports:
+      - "8002:8002"
+
+volumes:
+  dataset:
+  logs:
