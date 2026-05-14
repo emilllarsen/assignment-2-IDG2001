@@ -11,6 +11,7 @@ services:
     volumes:
       - dataset:/app/app/data
       - logs:/app/logs
+      - db:/app/db
 
   token-shop:
     build: ./token-shop
@@ -37,3 +38,4 @@ services:
 volumes:
   dataset:
   logs:
+  db:
