@@ -8,7 +8,7 @@ from pydantic import BaseModel
 app = FastAPI()
 
 # the folder where CSV log files are stored as a docker volume
-LOG_DIR = "/log_entries"
+LOG_DIR = "/logs"
 
 # primary in-memory data structure, all log entries live here first
 log_entries = []
