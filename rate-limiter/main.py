@@ -6,7 +6,7 @@ from pydantic import BaseModel
 app = FastAPI()
 
 # In-memory storage: {user_id: [list of datetime timestamps]}
-DATA = {}
+request_log = {}
 
 
 class RequestLog(BaseModel):
@@ -17,15 +17,18 @@ class RequestLog(BaseModel):
 @app.post("/{user_id}")
 def add_request(user_id: str, payload: RequestLog):
     """Log a new request for a user."""
-    now = datetime.now()
-    if user_id not in DATA:
-        DATA[user_id] = []
+    current_time = datetime.now()
+    if user_id not in request_log:
+        request_log[user_id] = []
 
-    DATA[user_id].append(now)
+    request_log[user_id].append(current_time)
 
     # Clean out entries older than 10 seconds
-    cutoff = now - timedelta(seconds=10)
-    DATA[user_id] = [t for t in DATA[user_id] if t > cutoff]
+    cutoff_time = current_time - timedelta(seconds=10)
+    request_log[user_id] = [
+        timestamp for timestamp in request_log[user_id]
+        if timestamp > cutoff_time
+    ]
 
     return {"message": "Request logged"}
 
@@ -33,20 +36,23 @@ def add_request(user_id: str, payload: RequestLog):
 @app.get("/{user_id}")
 def get_requests(user_id: str):
     """Return request count and delay for a user."""
-    now = datetime.now()
+    current_time = datetime.now()
 
-    if user_id not in DATA:
+    if user_id not in request_log:
         return {"requests": 0, "delay": 0.0}
 
     # Clean out entries older than 10 seconds
-    cutoff = now - timedelta(seconds=10)
-    DATA[user_id] = [t for t in DATA[user_id] if t > cutoff]
+    cutoff_time = current_time - timedelta(seconds=10)
+    request_log[user_id] = [
+        timestamp for timestamp in request_log[user_id]
+        if timestamp > cutoff_time
+    ]
 
-    requests = len(DATA[user_id])
+    request_count = len(request_log[user_id])
     delay = 0.0
 
-    if requests > 10:
-        r = requests - 10
-        delay = r / 10
+    if request_count > 10:
+        excess_requests = request_count - 10
+        delay = excess_requests / 10
 
-    return {"requests": requests, "delay": delay}
+    return {"requests": request_count, "delay": delay}
