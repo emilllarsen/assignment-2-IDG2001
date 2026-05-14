@@ -69,8 +69,7 @@ class TestTokens:
         for _ in range(10):  # use all 10 tokens
             client.get("/v2/country/JAM", headers={"X-User-Id": user_id})
 
-        # 11th call, no tokens left
-        response = client.get("/v2/country/JAM", headers={"X-User-Id": user_id})
+        response = client.get("/v2/country/JAM", headers={"X-User-Id": user_id})  # 11th call, no tokens left
         assert response.status_code == 403
 
 

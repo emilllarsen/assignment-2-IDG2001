@@ -28,7 +28,10 @@ def get_cache(endpoint: str):
     now = datetime.now()
     cutoff = now - timedelta(minutes=1)  # data older than 1 minute is to old to use
 
-    expired_keys = [key for key, entry in cache.items() if entry["timestamp"] < cutoff]  # find all entries that have expired
+    expired_keys = []
+    for key, entry in cache.items():
+        if entry["timestamp"] < cutoff:
+            expired_keys.append(key)
 
     # remove expired entries before checking
     for key in expired_keys:
