@@ -16,8 +16,8 @@ misses = 0
 
 class CacheStore(BaseModel):
     """What the main-api sends us when it wants to store a new response."""
-    endpoint: str  # The URL path used as the unique key, e.g. "/v2/athlete/Usain?fmt=json"
-    data: Any      # The actual response data to store (can be any JSON-serializable value)
+    endpoint: str 
+    data: Any
 
 
 @app.get("/cache")
