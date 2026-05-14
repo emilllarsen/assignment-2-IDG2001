@@ -85,11 +85,8 @@ def add_log(payload: LogEntry):
         "tokens": payload.tokens,
     }
 
-    # Store in the primary data structure first
-    logs.append(entry)
-
-    # Write any entries that haven't been written to disk yet
-    flush_to_file()
+    logs.append(entry)  # store in the primary data structure first
+    flush_to_file()  # write any entries that havent been written to disk yet
 
     return {"message": "Logged"}
 
