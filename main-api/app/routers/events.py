@@ -1,11 +1,11 @@
 """Event creation endpoint."""
-
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.olympic_event import OlympicEvent
 from app.schemas import OlympicEventCreate
 from app.utils.token_dep import consume_token, deduct_token
+from app.utils.logger import log_request
 
 router = APIRouter()
 
@@ -13,6 +13,7 @@ router = APIRouter()
 @router.post("/event", status_code=201)
 def create_event(
     payload: OlympicEventCreate,
+    request: Request,
     db: Session = Depends(get_db),
     user=Depends(consume_token),
 ):
@@ -37,5 +38,6 @@ def create_event(
     db.commit()
     db.refresh(new_event)
     deduct_token(user, db)
+    log_request(user.email, request.url.path)
 
     return {"message": "Event created", "id": new_event.id}

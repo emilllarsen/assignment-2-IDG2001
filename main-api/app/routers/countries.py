@@ -6,6 +6,7 @@ from app.models.olympic_event import OlympicEvent
 from app.utils.response_format import format_response
 from app.utils.token_dep import consume_token, deduct_token
 from app.utils.cache import get_cached, store_cache
+from app.utils.logger import log_request
 
 router = APIRouter()
 
@@ -24,6 +25,7 @@ def get_country(
     cached_data = get_cached(cache_key)
     if cached_data is not None:
         deduct_token(user, db)
+        log_request(user.email, cache_key)
         return format_response(cached_data, fmt)
 
     noc = noc.upper()
@@ -33,6 +35,7 @@ def get_country(
         raise HTTPException(status_code=404, detail="Country not found")
 
     deduct_token(user, db)
+    log_request(user.email, cache_key)
     sports_summary = {}
     for record in matching_records:
         sport_name = record.sport

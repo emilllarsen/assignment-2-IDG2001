@@ -6,6 +6,7 @@ from app.models.olympic_event import OlympicEvent
 from app.utils.response_format import format_response
 from app.utils.token_dep import consume_token, deduct_token
 from app.utils.cache import get_cached, store_cache
+from app.utils.logger import log_request
 
 router = APIRouter()
 
@@ -24,6 +25,7 @@ def get_athlete(
     cached_data = get_cached(cache_key)
     if cached_data is not None:
         deduct_token(user, db)
+        log_request(user.email, cache_key)
         return format_response(cached_data, fmt)
 
     search_name = name.replace("-", " ")
@@ -35,6 +37,7 @@ def get_athlete(
         raise HTTPException(status_code=404, detail="Athlete not found")
 
     deduct_token(user, db)
+    log_request(user.email, cache_key)
     results = [
         {
             "name": record.name,
