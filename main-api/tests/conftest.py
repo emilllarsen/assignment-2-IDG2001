@@ -22,7 +22,7 @@ def override_get_db():
         db.close()
 
 
-app.dependency_overrides[get_db] = override_get_db  #swap real db with test db so tests dont touch real data
+app.dependency_overrides[get_db] = override_get_db  # swap real db with test db so tests dont touch real data
 
 
 @pytest.fixture(autouse=True)

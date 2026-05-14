@@ -30,7 +30,7 @@ def consume_token(
         if rate_limiter_data["delay"] > 0:
             time.sleep(rate_limiter_data["delay"])
     except httpx.ConnectError:
-        pass  #rate limiter might not be running, thats ok
+        pass  # rate limiter might not be running, thats ok
 
     return user
 
