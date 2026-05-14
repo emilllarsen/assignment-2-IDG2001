@@ -10,7 +10,7 @@ Base = declarative_base()
 
 
 def get_db():
-    """Provide a database session for each request."""
+    """Open and close a database session for each request."""
     db = SessionLocal()
     try:
         yield db

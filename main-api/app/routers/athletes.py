@@ -16,7 +16,7 @@ def get_athlete(
     db: Session = Depends(get_db),
     user=Depends(consume_token),
 ):
-    """Return all Olympic results for an athlete."""
+    """Search for an athlete by name and return their Olympic results."""
     search_name = name.replace("-", " ")
     matching_records = db.query(OlympicEvent).filter(
         OlympicEvent.name.ilike(f"%{search_name}%")

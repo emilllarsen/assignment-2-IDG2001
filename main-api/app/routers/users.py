@@ -9,7 +9,7 @@ from app.schemas import UserCreate, UserUpdate, UserResponse
 
 
 def hash_password(password: str) -> str:
-    """Return a SHA-256 hex digest of the given password."""
+    """Hash a password using SHA-256."""
     return hashlib.sha256(password.encode()).hexdigest()
 
 router = APIRouter()
@@ -17,7 +17,7 @@ router = APIRouter()
 
 @router.post("/user", response_model=UserResponse, status_code=201)
 def create_user(payload: UserCreate, db: Session = Depends(get_db)):
-    """Create a new user with 10 starting tokens."""
+    """Register a new user. New users start with 10 tokens."""
     existing_user = db.query(User).filter(User.email == payload.email).first()
     if existing_user:
         raise HTTPException(status_code=409, detail="Email already registered")
@@ -34,7 +34,7 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
 
 @router.get("/user", response_model=List[UserResponse])
 def list_users(db: Session = Depends(get_db)):
-    """Return all registered users."""
+    """Get a list of all users."""
     return db.query(User).all()
 
 

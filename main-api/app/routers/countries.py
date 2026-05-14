@@ -16,7 +16,7 @@ def get_country(
     db: Session = Depends(get_db),
     user=Depends(consume_token),
 ):
-    """Return medal summary for a country grouped by sport."""
+    """Get all Olympic results for a country, grouped by sport."""
     noc = noc.upper()
     matching_records = db.query(OlympicEvent).filter(OlympicEvent.noc == noc).all()
 

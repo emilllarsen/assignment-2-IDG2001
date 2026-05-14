@@ -1,4 +1,4 @@
-"""Sport data endpoint with query parameter support."""
+"""Sport data endpoint. Supports filtering by country, year, season and medals."""
 from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -21,7 +21,7 @@ def get_sport(
     db: Session = Depends(get_db),
     user=Depends(consume_token),
 ):
-    """Return Olympic results for a sport with optional filters."""
+    """Get all results for a sport. Can be filtered by country, year, season and medals."""
     search_name = sport_name.replace("-", " ")
     db_query = db.query(OlympicEvent).filter(
         OlympicEvent.sport.ilike(f"%{search_name}%")
