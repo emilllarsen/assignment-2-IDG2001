@@ -22,34 +22,34 @@ def get_sport(
     user=Depends(consume_token),
 ):
     """Return Olympic results for a sport with optional filters."""
-    search = sport_name.replace("-", " ")
-    query = db.query(OlympicEvent).filter(
-        OlympicEvent.sport.ilike(f"%{search}%")
+    search_name = sport_name.replace("-", " ")
+    db_query = db.query(OlympicEvent).filter(
+        OlympicEvent.sport.ilike(f"%{search_name}%")
     )
 
     if country:
-        query = query.filter(OlympicEvent.noc == country.upper())
+        db_query = db_query.filter(OlympicEvent.noc == country.upper())
     if year:
-        query = query.filter(OlympicEvent.year == year)
+        db_query = db_query.filter(OlympicEvent.year == year)
     if season:
-        query = query.filter(OlympicEvent.season.ilike(season))
+        db_query = db_query.filter(OlympicEvent.season.ilike(season))
     if medals:
         if medals.lower() == "any":
-            query = query.filter(OlympicEvent.medal.isnot(None))
+            db_query = db_query.filter(OlympicEvent.medal.isnot(None))
         else:
-            query = query.filter(OlympicEvent.medal.ilike(medals))
+            db_query = db_query.filter(OlympicEvent.medal.ilike(medals))
 
-    rows = query.all()
+    matching_records = db_query.all()
     deduct_token(user, db)
     results = [
         {
-            "name": r.name,
-            "event": r.event,
-            "year": r.year,
-            "noc": r.noc,
-            "medal": r.medal,
+            "name": record.name,
+            "event": record.event,
+            "year": record.year,
+            "noc": record.noc,
+            "medal": record.medal,
         }
-        for r in rows
+        for record in matching_records
     ]
 
     return format_response(
