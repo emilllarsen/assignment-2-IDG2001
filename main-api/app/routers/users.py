@@ -1,10 +1,16 @@
 """User management endpoints."""
+import hashlib
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_db
 from app.models.user import User
 from app.schemas import UserCreate, UserUpdate, UserResponse
+
+
+def hash_password(password: str) -> str:
+    """Return a SHA-256 hex digest of the given password."""
+    return hashlib.sha256(password.encode()).hexdigest()
 
 router = APIRouter()
 
@@ -18,7 +24,7 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
 
     user = User(
         email=payload.email,
-        password_hash=payload.password,
+        password_hash=hash_password(payload.password),
     )
     db.add(user)
     db.commit()
@@ -55,7 +61,7 @@ def update_user(
     if payload.email is not None:
         user.email = payload.email
     if payload.password is not None:
-        user.password_hash = payload.password
+        user.password_hash = hash_password(payload.password)
 
     db.commit()
     db.refresh(user)
