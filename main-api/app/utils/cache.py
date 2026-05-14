@@ -6,12 +6,7 @@ CACHE_URL = "http://cache:8003"
 
 
 def get_cached(endpoint: str):
-    """Ask the cache service if it has a stored response for this endpoint.
-
-    Returns the cached data if found, or none if not found.
-    If the cache service is unreachable, we silently return none so the
-    main-api just falls back to querying the database as normal.
-    """
+    """Check if the cache has a stored response for this endpoint. Returns None if not found."""
     try:
         cache_response = httpx.get(f"{CACHE_URL}/cache", params={"endpoint": endpoint})
         cache_result = cache_response.json()
@@ -23,12 +18,7 @@ def get_cached(endpoint: str):
 
 
 def store_cache(endpoint: str, data: dict):
-    """Tell the cache service to store a response for this endpoint.
-
-    Called after the main-api has fetched data from the database,
-    so the next identical request can come from the cache instead.
-    If the cache service is unreachable, we do nothing.
-    """
+    """Save a response to the cache so the same request can be served faster next time."""
     try:
         httpx.post(f"{CACHE_URL}/cache", json={"endpoint": endpoint, "data": data})
     except httpx.ConnectError:
