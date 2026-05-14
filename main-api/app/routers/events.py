@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.olympic_event import OlympicEvent
 from app.schemas import OlympicEventCreate
-from app.utils.token_dep import consume_token
+from app.utils.token_dep import consume_token, deduct_token
 
 router = APIRouter()
 
@@ -36,5 +36,6 @@ def create_event(
     db.add(event)
     db.commit()
     db.refresh(event)
+    deduct_token(user, db)
 
     return {"message": "Event created", "id": event.id}

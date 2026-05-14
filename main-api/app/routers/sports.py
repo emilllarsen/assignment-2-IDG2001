@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.olympic_event import OlympicEvent
 from app.utils.response_format import format_response
-from app.utils.token_dep import consume_token
+from app.utils.token_dep import consume_token, deduct_token
 
 router = APIRouter()
 
@@ -40,7 +40,7 @@ def get_sport(
             query = query.filter(OlympicEvent.medal.ilike(medals))
 
     rows = query.all()
-
+    deduct_token(user, db)
     results = [
         {
             "name": r.name,

@@ -1,5 +1,5 @@
 """Country data endpoint."""
-from app.utils.token_dep import consume_token
+from app.utils.token_dep import consume_token, deduct_token
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.utils.response_format import format_response
@@ -23,6 +23,7 @@ def get_country(
     if not rows:
         raise HTTPException(status_code=404, detail="Country not found")
 
+    deduct_token(user, db)
     sports = {}
     for row in rows:
         sport = row.sport
