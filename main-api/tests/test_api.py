@@ -6,13 +6,13 @@ class TestUsers:
         })
         assert response.status_code == 201
         assert response.json()["email"] == "test@example.com"
-        assert response.json()["tokens"] == 10
+        assert response.json()["tokens"] == 10  #new users always start with 10
 
     def test_duplicate_user(self, client):
         client.post("/v2/user", json={
             "email": "dupe@test.com", "password": "secret123",
         })
-        response = client.post("/v2/user", json={
+        response = client.post("/v2/user", json={  #same email again, should fail
             "email": "dupe@test.com", "password": "other456",
         })
         assert response.status_code == 409
@@ -21,7 +21,7 @@ class TestUsers:
         create_response = client.post("/v2/user", json={
             "email": "find@test.com", "password": "secret123",
         })
-        user_id = create_response.json()["id"]
+        user_id = create_response.json()["id"]  #need the id to fetch the user
         response = client.get(f"/v2/user/{user_id}")
         assert response.status_code == 200
         assert response.json()["email"] == "find@test.com"
@@ -53,7 +53,7 @@ class TestTokens:
         })
         user_id = create_response.json()["id"]
 
-        client.get("/v2/country/JAM", headers={"X-User-Id": user_id})
+        client.get("/v2/country/JAM", headers={"X-User-Id": user_id})  #costs 1 token
 
         response = client.get(f"/v2/user/{user_id}")
         assert response.json()["tokens"] == 9
@@ -64,10 +64,10 @@ class TestTokens:
         })
         user_id = create_response.json()["id"]
 
-        for _ in range(10):
+        for _ in range(10):  #use all 10 tokens
             client.get("/v2/country/JAM", headers={"X-User-Id": user_id})
 
-        response = client.get("/v2/country/JAM", headers={"X-User-Id": user_id})
+        response = client.get("/v2/country/JAM", headers={"X-User-Id": user_id})  #11th call, no tokens left
         assert response.status_code == 403
 
 
