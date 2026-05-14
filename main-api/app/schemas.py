@@ -31,6 +31,7 @@ class TokenResponse(BaseModel):
     tokens: int
     message: str
 
+
 class TokenRedeem(BaseModel):
     user_id: str
     code: str

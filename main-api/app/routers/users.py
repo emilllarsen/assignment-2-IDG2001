@@ -1,6 +1,7 @@
 """User management endpoints."""
 import hashlib
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_db
@@ -63,7 +64,11 @@ def update_user(
     if payload.password is not None:
         user.password_hash = hash_password(payload.password)
 
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Email already registered")
     db.refresh(user)
     return user
 

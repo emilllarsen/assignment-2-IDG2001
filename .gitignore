@@ -1,3 +1,5 @@
-.DS.Store
+.DS_Store
+__pycache__/
+*.pyc
 md-formatted-lectures
 md-formatted-exams
