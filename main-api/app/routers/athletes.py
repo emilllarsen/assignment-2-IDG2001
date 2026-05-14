@@ -38,8 +38,9 @@ def get_athlete(
 
     deduct_token(user, db)
     log_request(user.email, cache_key)
-    results = [
-        {
+    results = []
+    for record in matching_records:
+        results.append({
             "name": record.name,
             "sport": record.sport,
             "event": record.event,
@@ -47,9 +48,7 @@ def get_athlete(
             "city": record.city,
             "noc": record.noc,
             "medal": record.medal,
-        }
-        for record in matching_records
-    ]
+        })
 
     data = {"athlete": name, "count": len(results), "results": results}
     store_cache(cache_key, data)

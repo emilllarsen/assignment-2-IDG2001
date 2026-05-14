@@ -57,16 +57,15 @@ def get_sport(
 
     deduct_token(user, db)
     log_request(user.email, cache_key)
-    results = [
-        {
+    results = []
+    for record in matching_records:
+        results.append({
             "name": record.name,
             "event": record.event,
             "year": record.year,
             "noc": record.noc,
             "medal": record.medal,
-        }
-        for record in matching_records
-    ]
+        })
 
     data = {
         "sport": sport_name.replace("-", " ").title(),

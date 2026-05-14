@@ -26,4 +26,3 @@ app.include_router(events.router, prefix="/v2")
 @app.get("/")
 def root():
     return {"message": "Welcome to the Olympic Games API"}
-
