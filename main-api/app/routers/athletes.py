@@ -35,8 +35,9 @@ def get_athlete(
         raise HTTPException(status_code=404, detail="Athlete not found")
 
     deduct_token(user, db)
-    results = [
-        {
+    results = []
+    for record in matching_records:
+        results.append({
             "name": record.name,
             "sport": record.sport,
             "event": record.event,
@@ -44,9 +45,7 @@ def get_athlete(
             "city": record.city,
             "noc": record.noc,
             "medal": record.medal,
-        }
-        for record in matching_records
-    ]
+        })
 
     data = {"athlete": name, "count": len(results), "results": results}
     store_cache(cache_key, data)
