@@ -11,7 +11,6 @@ from app.seed import clean_float, clean_int, clean_str
     (float("nan"), None),
 ])
 def test_clean_float(value, expected):
-    """clean_float converts values to float or None for invalid input."""
     assert clean_float(value) == expected
 
 
@@ -21,7 +20,6 @@ def test_clean_float(value, expected):
     (None, None),
 ])
 def test_clean_int(value, expected):
-    """clean_int converts values to int or None for invalid input."""
     assert clean_int(value) == expected
 
 
@@ -33,5 +31,4 @@ def test_clean_int(value, expected):
     ("nan", None),
 ])
 def test_clean_str(value, expected):
-    """clean_str converts values to stripped strings or None for invalid input."""
     assert clean_str(value) == expected
