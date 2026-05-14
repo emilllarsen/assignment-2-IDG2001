@@ -53,7 +53,7 @@ def delete_old_files():
 
 
 def flush_to_file():
-    """Write any unwritten entries from the `logs` list to today's CSV file."""
+    """Write new entries from memory to today's CSV file."""
     global flush_index
 
     new_entries = logs[flush_index:]
@@ -77,7 +77,7 @@ def flush_to_file():
 
 @app.post("/log")
 def add_log(payload: LogEntry):
-    """Add a new log entry to the in-memory list, then flush unwritten entries to disk."""
+    """Log a request and save it to the CSV file."""
     entry = {
         "time": datetime.now().isoformat(),
         "username": payload.username,
@@ -109,7 +109,7 @@ def get_retention():
 
 @app.post("/retention")
 def set_retention(payload: RetentionUpdate):
-    """Update the retention period and immediately delete any files that are now too old."""
+    """Update how many days of logs to keep and delete files that are now too old."""
     global retention_days
     retention_days = payload.n
     delete_old_files()
