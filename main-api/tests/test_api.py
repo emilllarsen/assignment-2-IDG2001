@@ -89,7 +89,7 @@ class TestDataEndpoints:
         assert response.json()["results"][0]["noc"] == "JAM"
 
     def test_get_country_returns_data(self, client):
-        create_response = client.post("/v2/user", json={  #data endpoints need a user with tokens
+        create_response = client.post("/v2/user", json={
             "email": "country@test.com",
             "password": "secret123",
         })
@@ -106,7 +106,7 @@ class TestDataEndpoints:
         assert "Skiing" in response_body["sports"]
 
     def test_get_sport_returns_data(self, client):
-        create_response = client.post("/v2/user", json={  #data endpoints need a user with tokens
+        create_response = client.post("/v2/user", json={
             "email": "sport@test.com",
             "password": "secret123",
         })
@@ -121,7 +121,7 @@ class TestDataEndpoints:
         assert response.json()["count"] == 2
 
     def test_athlete_not_found_does_not_deduct_token(self, client):
-        create_response = client.post("/v2/user", json={  #starts with 10 tokens
+        create_response = client.post("/v2/user", json={
             "email": "nodeduce@test.com",
             "password": "secret123",
         })
