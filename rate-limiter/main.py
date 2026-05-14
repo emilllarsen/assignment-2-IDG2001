@@ -23,12 +23,12 @@ def add_request(user_id: str, payload: RequestLog):
 
     request_log[user_id].append(current_time)
 
-    # Clean out entries older than 10 seconds
-    cutoff_time = current_time - timedelta(seconds=10)
-    request_log[user_id] = [
-        timestamp for timestamp in request_log[user_id]
-        if timestamp > cutoff_time
-    ]
+    cutoff_time = current_time - timedelta(seconds=10)  # clean out entries older than 10 seconds
+    recent_requests = []
+    for timestamp in request_log[user_id]:
+        if timestamp > cutoff_time:
+            recent_requests.append(timestamp)
+    request_log[user_id] = recent_requests
 
     return {"message": "Request logged"}
 
@@ -41,12 +41,12 @@ def get_requests(user_id: str):
     if user_id not in request_log:
         return {"requests": 0, "delay": 0.0}
 
-    # Clean out entries older than 10 seconds
     cutoff_time = current_time - timedelta(seconds=10)
-    request_log[user_id] = [
-        timestamp for timestamp in request_log[user_id]
-        if timestamp > cutoff_time
-    ]
+    recent_requests = []
+    for timestamp in request_log[user_id]:
+        if timestamp > cutoff_time:
+            recent_requests.append(timestamp)
+    request_log[user_id] = recent_requests
 
     request_count = len(request_log[user_id])
     delay = 0.0
