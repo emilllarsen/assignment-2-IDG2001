@@ -52,3 +52,4 @@ class OlympicEventCreate(BaseModel):
     season: Optional[str] = None
     city: Optional[str] = None
     medal: Optional[str] = None
+    

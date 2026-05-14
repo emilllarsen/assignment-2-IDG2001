@@ -1,4 +1,4 @@
-"""Multi-format response utility for JSON, XML, and CSV."""
+"""Helper for returning responses in different formats (JSON, XML, CSV)."""
 
 import csv
 import io

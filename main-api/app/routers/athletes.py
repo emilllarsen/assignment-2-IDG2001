@@ -17,14 +17,8 @@ def get_athlete(
     fmt: str = Query(default="json"),
     db: Session = Depends(get_db),
     user=Depends(consume_token),
-
-    """Return all Olympic results for an athlete.
-
-    First checks the cache. If the data is already stored, we return it immediately without touching the database.
-    If not found in the cache, we query the database and then store the result
-    in the cache for next time.
-    """
-    
+):
+    """Search for an athlete by name and return their Olympic results."""
     cache_key = f"{request.url.path}?{request.url.query}"
 
     cached_data = get_cached(cache_key)
@@ -32,17 +26,15 @@ def get_athlete(
         deduct_token(user, db)
         return format_response(cached_data, fmt)
 
-    search = name.replace("-", " ")
-    rows = db.query(OlympicEvent).filter(
-        OlympicEvent.name.ilike(f"%{search}%")
-
+    search_name = name.replace("-", " ")
+    matching_records = db.query(OlympicEvent).filter(
+        OlympicEvent.name.ilike(f"%{search_name}%")
     ).all()
 
     if not matching_records:
         raise HTTPException(status_code=404, detail="Athlete not found")
 
     deduct_token(user, db)
-
     results = [
         {
             "name": record.name,
@@ -57,7 +49,6 @@ def get_athlete(
     ]
 
     data = {"athlete": name, "count": len(results), "results": results}
-
     store_cache(cache_key, data)
 
     return format_response(data, fmt)

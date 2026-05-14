@@ -13,11 +13,7 @@ def consume_token(
     x_user_id: str = Header(...),
     db: Session = Depends(get_db),
 ):
-    """Validate user has tokens and apply rate limiting. Does not deduct yet.
-
-    Routes must call deduct_token() after confirming the resource exists,
-    so users are not charged for requests that return 404.
-    """
+    """Check the user exists, has tokens left, and apply rate limiting."""
     user = db.query(User).filter(User.id == x_user_id).first()
     if not user:
         raise HTTPException(status_code=401, detail="Invalid user ID")
@@ -29,10 +25,10 @@ def consume_token(
             f"{RATE_LIMITER_URL}/{x_user_id}",
             json={"username": user.email},
         )
-        resp = httpx.get(f"{RATE_LIMITER_URL}/{x_user_id}")
-        data = resp.json()
-        if data["delay"] > 0:
-            time.sleep(data["delay"])
+        rate_limiter_response = httpx.get(f"{RATE_LIMITER_URL}/{x_user_id}")
+        rate_limiter_data = rate_limiter_response.json()
+        if rate_limiter_data["delay"] > 0:
+            time.sleep(rate_limiter_data["delay"])
     except httpx.ConnectError:
         pass
 
@@ -40,6 +36,6 @@ def consume_token(
 
 
 def deduct_token(user: User, db: Session) -> None:
-    """Deduct one token from the user and commit. Call after a successful data fetch."""
+    """Remove one token from the user's balance."""
     user.tokens -= 1
     db.commit()

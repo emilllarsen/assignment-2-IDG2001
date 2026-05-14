@@ -1,4 +1,4 @@
-"""Sport data endpoint with query parameter support."""
+"""Sport data endpoint. Supports filtering by country, year, season and medals."""
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
@@ -23,14 +23,7 @@ def get_sport(
     db: Session = Depends(get_db),
     user=Depends(consume_token),
 ):
-
-    """Return Olympic results for a sport with optional filters.
-
-    First checks the cache. If the data is already stored, we return it immediately without touching the database.
-    If not found in the cache, we query the database and then store the result
-    in the cache for next time.
-    """
-
+    """Get all results for a sport. Can be filtered by country, year, season and medals."""
     cache_key = f"{request.url.path}?{request.url.query}"
 
     cached_data = get_cached(cache_key)
@@ -38,10 +31,11 @@ def get_sport(
         deduct_token(user, db)
         return format_response(cached_data, fmt)
 
-    search = sport_name.replace("-", " ")
-    query = db.query(OlympicEvent).filter(
-        OlympicEvent.sport.ilike(f"%{search}%")
+    search_name = sport_name.replace("-", " ")
+    db_query = db.query(OlympicEvent).filter(
+        OlympicEvent.sport.ilike(f"%{search_name}%")
     )
+
     if country:
         db_query = db_query.filter(OlympicEvent.noc == country.upper())
     if year:
@@ -54,13 +48,12 @@ def get_sport(
         else:
             db_query = db_query.filter(OlympicEvent.medal.ilike(medals))
 
+    matching_records = db_query.all()
 
-    rows = query.all()
-
-    if not rows:
+    if not matching_records:
         raise HTTPException(status_code=404, detail="Sport not found")
-    deduct_token(user, db)
 
+    deduct_token(user, db)
     results = [
         {
             "name": record.name,

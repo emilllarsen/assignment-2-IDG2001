@@ -16,7 +16,7 @@ def create_event(
     db: Session = Depends(get_db),
     user=Depends(consume_token),
 ):
-    """Create a new athlete participation record."""
+    """Add a new event/participation record to the database."""
     new_event = OlympicEvent(
         name=payload.name,
         sex=payload.sex,

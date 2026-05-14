@@ -18,17 +18,11 @@ def get_country(
     db: Session = Depends(get_db),
     user=Depends(consume_token),
 ):
-    """Return medal summary for a country grouped by sport.
-
-    First checks the cache. If the data is already stored, we return it immediately without touching the database.
-    If not found in the cache, we query the database and then store the result
-    in the cache for next time.
-    """
+    """Get all Olympic results for a country, grouped by sport."""
     cache_key = f"{request.url.path}?{request.url.query}"
 
     cached_data = get_cached(cache_key)
     if cached_data is not None:
-        # We got a hit! Return the stored data without querying the database.
         deduct_token(user, db)
         return format_response(cached_data, fmt)
 
@@ -39,22 +33,23 @@ def get_country(
         raise HTTPException(status_code=404, detail="Country not found")
 
     deduct_token(user, db)
+    sports_summary = {}
+    for record in matching_records:
+        sport_name = record.sport
+        if sport_name not in sports_summary:
+            sports_summary[sport_name] = {
+                "gold": 0, "silver": 0, "bronze": 0,
+                "participations": 0,
+            }
+        sports_summary[sport_name]["participations"] += 1
+        if record.medal == "Gold":
+            sports_summary[sport_name]["gold"] += 1
+        elif record.medal == "Silver":
+            sports_summary[sport_name]["silver"] += 1
+        elif record.medal == "Bronze":
+            sports_summary[sport_name]["bronze"] += 1
 
-    sports = {}
-    for row in rows:
-        sport = row.sport
-        if sport not in sports:
-            sports[sport] = {"gold": 0, "silver": 0, "bronze": 0, "participations": 0}
-        sports[sport]["participations"] += 1
-        if row.medal == "Gold":
-            sports[sport]["gold"] += 1
-        elif row.medal == "Silver":
-            sports[sport]["silver"] += 1
-        elif row.medal == "Bronze":
-            sports[sport]["bronze"] += 1
-
-    data = {"noc": noc, "sports": sports}
-
+    data = {"noc": noc, "sports": sports_summary}
     store_cache(cache_key, data)
 
     return format_response(data, fmt)
