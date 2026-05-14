@@ -13,25 +13,33 @@ def consume_token(
     x_user_id: str = Header(...),
     db: Session = Depends(get_db),
 ):
-    """Check rate limit, then check and deduct one token."""
+    """Validate user has tokens and apply rate limiting. Does not deduct yet.
+
+    Routes must call deduct_token() after confirming the resource exists,
+    so users are not charged for requests that return 404.
+    """
     user = db.query(User).filter(User.id == x_user_id).first()
     if not user:
         raise HTTPException(status_code=401, detail="Invalid user ID")
     if user.tokens <= 0:
         raise HTTPException(status_code=403, detail="No tokens remaining")
 
-    httpx.post(
-        f"{RATE_LIMITER_URL}/{x_user_id}",
-        json={"username": user.email},
-    )
+    try:
+        httpx.post(
+            f"{RATE_LIMITER_URL}/{x_user_id}",
+            json={"username": user.email},
+        )
+        resp = httpx.get(f"{RATE_LIMITER_URL}/{x_user_id}")
+        data = resp.json()
+        if data["delay"] > 0:
+            time.sleep(data["delay"])
+    except httpx.ConnectError:
+        pass
 
-    resp = httpx.get(f"{RATE_LIMITER_URL}/{x_user_id}")
-    data = resp.json()
+    return user
 
-    if data["delay"] > 0:
-        time.sleep(data["delay"])
 
+def deduct_token(user: User, db: Session) -> None:
+    """Deduct one token from the user and commit. Call after a successful data fetch."""
     user.tokens -= 1
     db.commit()
-    db.refresh(user)
-    return user

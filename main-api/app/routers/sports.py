@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.olympic_event import OlympicEvent
-from app.utils.token_dep import consume_token
+from app.utils.response_format import format_response
+from app.utils.token_dep import consume_token, deduct_token
 
 router = APIRouter()
 
@@ -12,6 +13,7 @@ router = APIRouter()
 @router.get("/sport/{sport_name}")
 def get_sport(
     sport_name: str,
+    fmt: str = Query(default="json"),
     country: Optional[str] = Query(default=None),
     year: Optional[int] = Query(default=None),
     season: Optional[str] = Query(default=None),
@@ -38,7 +40,7 @@ def get_sport(
             query = query.filter(OlympicEvent.medal.ilike(medals))
 
     rows = query.all()
-
+    deduct_token(user, db)
     results = [
         {
             "name": r.name,
@@ -50,14 +52,17 @@ def get_sport(
         for r in rows
     ]
 
-    return {
-        "sport": sport_name.replace("-", " ").title(),
-        "filters": {
-            "country": country,
-            "year": year,
-            "season": season,
-            "medals": medals,
+    return format_response(
+        {
+            "sport": sport_name.replace("-", " ").title(),
+            "filters": {
+                "country": country,
+                "year": year,
+                "season": season,
+                "medals": medals,
+            },
+            "count": len(results),
+            "results": results,
         },
-        "count": len(results),
-        "results": results,
-    }
+        fmt,
+    )

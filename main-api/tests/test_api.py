@@ -3,7 +3,7 @@
 
 class TestUsers:
     def test_create_user(self, client):
-        resp = client.post("/v1/user", json={
+        resp = client.post("/v2/user", json={
             "email": "test@example.com",
             "password": "secret123",
         })
@@ -12,64 +12,109 @@ class TestUsers:
         assert resp.json()["tokens"] == 10
 
     def test_duplicate_user(self, client):
-        client.post("/v1/user", json={
+        client.post("/v2/user", json={
             "email": "dupe@test.com", "password": "secret123",
         })
-        resp = client.post("/v1/user", json={
+        resp = client.post("/v2/user", json={
             "email": "dupe@test.com", "password": "other456",
         })
         assert resp.status_code == 409
 
     def test_get_user(self, client):
-        create = client.post("/v1/user", json={
+        create = client.post("/v2/user", json={
             "email": "find@test.com", "password": "secret123",
         })
         user_id = create.json()["id"]
-        resp = client.get(f"/v1/user/{user_id}")
+        resp = client.get(f"/v2/user/{user_id}")
         assert resp.status_code == 200
         assert resp.json()["email"] == "find@test.com"
 
     def test_delete_user(self, client):
-        create = client.post("/v1/user", json={
+        create = client.post("/v2/user", json={
             "email": "delete@test.com", "password": "secret123",
         })
         user_id = create.json()["id"]
-        resp = client.delete(f"/v1/user/{user_id}")
+        resp = client.delete(f"/v2/user/{user_id}")
         assert resp.status_code == 204
 
 
 class TestTokens:
     def test_add_tokens(self, client):
-        create = client.post("/v1/user", json={
+        create = client.post("/v2/user", json={
             "email": "token@test.com", "password": "secret123",
         })
         user_id = create.json()["id"]
-        resp = client.post("/v1/tokens", json={
+        resp = client.post("/v2/tokens", json={
             "user_id": user_id, "amount": 5,
         })
         assert resp.json()["tokens"] == 15
 
     def test_token_consumption(self, client):
-        create = client.post("/v1/user", json={
+        create = client.post("/v2/user", json={
             "email": "consume@test.com", "password": "secret123",
         })
         user_id = create.json()["id"]
 
+        client.get("/v2/country/JAM", headers={"X-User-Id": user_id})
 
-        client.get("/v1/country/USA", headers={"X-User-Id": user_id})
-
-
-        resp = client.get(f"/v1/user/{user_id}")
+        resp = client.get(f"/v2/user/{user_id}")
         assert resp.json()["tokens"] == 9
 
     def test_no_tokens_returns_403(self, client):
-        create = client.post("/v1/user", json={
+        create = client.post("/v2/user", json={
             "email": "broke@test.com", "password": "secret123",
         })
         user_id = create.json()["id"]
 
         for _ in range(10):
-            client.get("/v1/country/USA", headers={"X-User-Id": user_id})
+            client.get("/v2/country/JAM", headers={"X-User-Id": user_id})
 
-        resp = client.get("/v1/country/USA", headers={"X-User-Id": user_id})
+        resp = client.get("/v2/country/JAM", headers={"X-User-Id": user_id})
         assert resp.status_code == 403
+
+
+class TestDataEndpoints:
+    def test_get_athlete_returns_data(self, client):
+        create = client.post("/v2/user", json={
+            "email": "data@test.com", "password": "secret123",
+        })
+        user_id = create.json()["id"]
+        resp = client.get(
+            "/v2/athlete/Usain-Bolt", headers={"X-User-Id": user_id}
+        )
+        assert resp.status_code == 200
+        assert resp.json()["count"] == 2
+        assert resp.json()["results"][0]["noc"] == "JAM"
+
+    def test_get_country_returns_data(self, client):
+        create = client.post("/v2/user", json={
+            "email": "country@test.com", "password": "secret123",
+        })
+        user_id = create.json()["id"]
+        resp = client.get(
+            "/v2/country/NOR", headers={"X-User-Id": user_id}
+        )
+        assert resp.status_code == 200
+        assert "Skiing" in resp.json()["sports"]
+
+    def test_get_sport_returns_data(self, client):
+        create = client.post("/v2/user", json={
+            "email": "sport@test.com", "password": "secret123",
+        })
+        user_id = create.json()["id"]
+        resp = client.get(
+            "/v2/sport/Athletics", headers={"X-User-Id": user_id}
+        )
+        assert resp.status_code == 200
+        assert resp.json()["count"] == 2
+
+    def test_athlete_not_found_does_not_deduct_token(self, client):
+        create = client.post("/v2/user", json={
+            "email": "nodeduce@test.com", "password": "secret123",
+        })
+        user_id = create.json()["id"]
+        client.get(
+            "/v2/athlete/nobody-ever", headers={"X-User-Id": user_id}
+        )
+        resp = client.get(f"/v2/user/{user_id}")
+        assert resp.json()["tokens"] == 10
