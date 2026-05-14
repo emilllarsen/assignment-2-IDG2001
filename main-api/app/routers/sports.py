@@ -23,6 +23,7 @@ def get_sport(
     db: Session = Depends(get_db),
     user=Depends(consume_token),
 ):
+
     """Return Olympic results for a sport with optional filters.
 
     First checks the cache. If the data is already stored, we return it immediately without touching the database.
@@ -42,33 +43,33 @@ def get_sport(
         OlympicEvent.sport.ilike(f"%{search}%")
     )
     if country:
-        query = query.filter(OlympicEvent.noc == country.upper())
+        db_query = db_query.filter(OlympicEvent.noc == country.upper())
     if year:
-        query = query.filter(OlympicEvent.year == year)
+        db_query = db_query.filter(OlympicEvent.year == year)
     if season:
-        query = query.filter(OlympicEvent.season.ilike(season))
+        db_query = db_query.filter(OlympicEvent.season.ilike(season))
     if medals:
         if medals.lower() == "any":
-            query = query.filter(OlympicEvent.medal.isnot(None))
+            db_query = db_query.filter(OlympicEvent.medal.isnot(None))
         else:
-            query = query.filter(OlympicEvent.medal.ilike(medals))
+            db_query = db_query.filter(OlympicEvent.medal.ilike(medals))
+
 
     rows = query.all()
 
     if not rows:
         raise HTTPException(status_code=404, detail="Sport not found")
-
     deduct_token(user, db)
 
     results = [
         {
-            "name": r.name,
-            "event": r.event,
-            "year": r.year,
-            "noc": r.noc,
-            "medal": r.medal,
+            "name": record.name,
+            "event": record.event,
+            "year": record.year,
+            "noc": record.noc,
+            "medal": record.medal,
         }
-        for r in rows
+        for record in matching_records
     ]
 
     data = {

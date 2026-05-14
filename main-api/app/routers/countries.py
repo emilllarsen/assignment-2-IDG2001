@@ -33,9 +33,9 @@ def get_country(
         return format_response(cached_data, fmt)
 
     noc = noc.upper()
-    rows = db.query(OlympicEvent).filter(OlympicEvent.noc == noc).all()
+    matching_records = db.query(OlympicEvent).filter(OlympicEvent.noc == noc).all()
 
-    if not rows:
+    if not matching_records:
         raise HTTPException(status_code=404, detail="Country not found")
 
     deduct_token(user, db)

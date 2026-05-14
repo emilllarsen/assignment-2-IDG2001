@@ -14,8 +14,8 @@ TOKEN_SHOP_URL = "http://token-shop:8001"
 @router.get("/tokens")
 def get_token_price():
     """Return the current token price from the Token Shop."""
-    resp = httpx.get(f"{TOKEN_SHOP_URL}/price")
-    return resp.json()
+    price_response = httpx.get(f"{TOKEN_SHOP_URL}/price")
+    return price_response.json()
 
 
 @router.post("/tokens")
@@ -27,18 +27,18 @@ def redeem_tokens(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    response = httpx.post(
+    shop_response = httpx.post(
         f"{TOKEN_SHOP_URL}/verify",
         json={"code": payload.code},
     )
 
-    if response.status_code != 200:
+    if shop_response.status_code != 200:
         raise HTTPException(
             status_code=400,
             detail="Invalid or already used code",
         )
 
-    tokens_to_add = response.json()["tokens"]
+    tokens_to_add = shop_response.json()["tokens"]
     user.tokens += tokens_to_add
     db.commit()
     db.refresh(user)
