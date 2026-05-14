@@ -31,6 +31,7 @@ class TokenResponse(BaseModel):
     tokens: int
     message: str
 
+
 class TokenRedeem(BaseModel):
     user_id: str
     code: str
@@ -51,3 +52,4 @@ class OlympicEventCreate(BaseModel):
     season: Optional[str] = None
     city: Optional[str] = None
     medal: Optional[str] = None
+    
