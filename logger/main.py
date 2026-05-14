@@ -11,9 +11,9 @@ app = FastAPI()
 LOG_DIR = "/logs"
 
 # primary in-memory data structure, all log entries live here first
-logs = []
+log_entries = []
 
-# how many entries from logs have already been written to the CSV file.
+# how many entries from log_entries have already been written to the CSV file.
 # use this to avoid re-writing entries that are already on disk.
 flush_index = 0
 
@@ -34,7 +34,7 @@ class RetentionUpdate(BaseModel):
 
 
 def get_log_path(date: datetime) -> str:
-    """Return the file path for a given date, e.g, /logs/2024-05-14.csv"""
+    """Return the file path for a given date, e.g, /log_entries/2024-05-14.csv"""
     return os.path.join(LOG_DIR, date.strftime("%Y-%m-%d") + ".csv")
 
 
@@ -53,10 +53,10 @@ def delete_old_files():
 
 
 def flush_to_file():
-    """Write any unwritten entries from the `logs` list to today's CSV file."""
+    """Write new entries from memory to today's CSV file."""
     global flush_index
 
-    new_entries = logs[flush_index:]
+    new_entries = log_entries[flush_index:]
     if not new_entries:
         return
 
@@ -72,24 +72,21 @@ def flush_to_file():
             writer.writeheader()
         writer.writerows(new_entries)
 
-    flush_index = len(logs)
+    flush_index = len(log_entries)
 
 
 @app.post("/log")
 def add_log(payload: LogEntry):
-    """Add a new log entry to the in-memory list, then flush unwritten entries to disk."""
-    entry = {
+    """Log a request and save it to the CSV file."""
+    log_entry = {
         "time": datetime.now().isoformat(),
         "username": payload.username,
         "endpoint": payload.endpoint,
         "tokens": payload.tokens,
     }
 
-    # Store in the primary data structure first
-    logs.append(entry)
-
-    # Write any entries that haven't been written to disk yet
-    flush_to_file()
+    log_entries.append(log_entry)  # store in the primary data structure first
+    flush_to_file()  # write any entries that havent been written to disk yet
 
     return {"message": "Logged"}
 
@@ -99,8 +96,8 @@ def get_log():
     """Return all log entries stored in memory."""
     return {
         "date": datetime.now().strftime("%Y-%m-%d"),
-        "count": len(logs),
-        "entries": logs,
+        "count": len(log_entries),
+        "entries": log_entries,
     }
 
 
@@ -112,7 +109,7 @@ def get_retention():
 
 @app.post("/retention")
 def set_retention(payload: RetentionUpdate):
-    """Update the retention period and immediately delete any files that are now too old."""
+    """Update how many days of log_entries to keep and delete files that are now too old."""
     global retention_days
     retention_days = payload.n
     delete_old_files()
