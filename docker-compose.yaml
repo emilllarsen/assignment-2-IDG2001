@@ -6,6 +6,7 @@ services:
     volumes:
       - dataset:/app/app/data
       - logs:/app/logs
+      - db:/app/db
 
   token-shop:
     build: ./token-shop
@@ -17,6 +18,12 @@ services:
     ports:
       - "8002:8002"
 
+  cache:
+    build: ./cache
+    ports:
+      - "8003:8003"
+
 volumes:
   dataset:
   logs:
+  db:

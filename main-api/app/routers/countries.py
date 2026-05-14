@@ -1,10 +1,11 @@
 """Country data endpoint."""
-from app.utils.token_dep import consume_token, deduct_token
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
-from app.utils.response_format import format_response
-from app.models.olympic_event import OlympicEvent
 from app.database import get_db
+from app.models.olympic_event import OlympicEvent
+from app.utils.response_format import format_response
+from app.utils.token_dep import consume_token, deduct_token
+from app.utils.cache import get_cached, store_cache
 
 router = APIRouter()
 
@@ -12,11 +13,19 @@ router = APIRouter()
 @router.get("/country/{noc}")
 def get_country(
     noc: str,
+    request: Request,
     fmt: str = Query(default="json"),
     db: Session = Depends(get_db),
     user=Depends(consume_token),
 ):
     """Get all Olympic results for a country, grouped by sport."""
+    cache_key = f"{request.url.path}?{request.url.query}"
+
+    cached_data = get_cached(cache_key)
+    if cached_data is not None:
+        deduct_token(user, db)
+        return format_response(cached_data, fmt)
+
     noc = noc.upper()
     matching_records = db.query(OlympicEvent).filter(OlympicEvent.noc == noc).all()
 
@@ -40,4 +49,7 @@ def get_country(
         elif record.medal == "Bronze":
             sports_summary[sport_name]["bronze"] += 1
 
-    return format_response({"noc": noc, "sports": sports_summary}, fmt)
+    data = {"noc": noc, "sports": sports_summary}
+    store_cache(cache_key, data)
+
+    return format_response(data, fmt)
