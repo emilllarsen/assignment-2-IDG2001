@@ -30,7 +30,7 @@ class LogEntry(BaseModel):
 
 class RetentionUpdate(BaseModel):
     """Schema for changing the retention period."""
-    days: int
+    n: int
 
 
 def get_log_path(date: datetime) -> str:
@@ -111,6 +111,6 @@ def get_retention():
 def set_retention(payload: RetentionUpdate):
     """Update how many days of log_entries to keep and delete files that are now too old."""
     global retention_days
-    retention_days = payload.days
+    retention_days = payload.n
     delete_old_files()
     return {"n": retention_days}
