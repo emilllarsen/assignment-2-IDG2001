@@ -15,20 +15,20 @@ token_price = 2
 
 
 class BuyRequest(BaseModel):
-    """Schema for buying tokens."""
+    """For buying tokens."""
     username: str
-    password: str 
+    password: str
     money: int
 
 
 class CodeRequest(BaseModel):
-    """Schema for verifying a code."""
+    """For verifying a code."""
     code: str
 
 
 class PriceUpdate(BaseModel):
-    """Schema for updating token price."""
-    price: int # must eb at least 1
+    """For updating the token price."""
+    price: int  # must be at least 1
 
     @field_validator("price")
     @classmethod
@@ -41,18 +41,21 @@ class PriceUpdate(BaseModel):
 
 @app.post("/buy")
 def buy_tokens(payload: BuyRequest):
-    """Buy tokens with money. Returns a secret code."""
+    """Buy tokens with money. Returns a secret code"""
+    # int division. 10 money at price of 2 gives 5 tokens
     tokens_to_give = payload.money // token_price
 
+    # generate a random 32 character string, then hash to a secret code
     random_characters = ''.join(
         random.choices(string.ascii_letters + string.digits, k=32)
     )
     secret_code = hashlib.sha256(random_characters.encode()).hexdigest()
 
+    # store the purchases so /verify can look it up
     purchases[secret_code] = {
         "username": payload.username,
         "tokens": tokens_to_give,
-        "used": False,
+        "used": False,  # true when the code has been redeemed
     }
 
     return {"secret": secret_code}
@@ -60,17 +63,22 @@ def buy_tokens(payload: BuyRequest):
 
 @app.post("/verify")
 def verify_code(payload: CodeRequest):
-    """Verify a secret code. Returns tokens. One-time use."""
+    """Check if a secret code is valid and return how many tokens it is worth."""
+    
+    # look up the secret code in the purchases above
     existing_purchase = purchases.get(payload.code)
 
+    # the code does not exist
     if not existing_purchase:
         raise HTTPException(status_code=404, detail="Invalid code")
 
+    # the code has already been used. prevent so its not used multiple times
     if existing_purchase["used"]:
         raise HTTPException(
             status_code=400, detail="Code already used"
         )
 
+    # mark the code as used so it cant be redeemed again 
     existing_purchase["used"] = True
 
     return {"tokens": existing_purchase["tokens"]}
@@ -85,6 +93,6 @@ def get_price():
 @app.post("/price")
 def set_price(payload: PriceUpdate):
     """Admin endpoint to update the token price."""
-    global token_price
+    global token_price  # update the shared variable, not just inside this function
     token_price = payload.price
     return {"price": token_price}
