@@ -17,7 +17,7 @@ token_price = 2
 class BuyRequest(BaseModel):
     """Schema for buying tokens."""
     username: str
-    password: str
+    password: str 
     money: int
 
 
@@ -28,15 +28,15 @@ class CodeRequest(BaseModel):
 
 class PriceUpdate(BaseModel):
     """Schema for updating token price."""
-    price: int
+    price: int # must eb at least 1
 
     @field_validator("price")
     @classmethod
-    def price_must_be_positive(cls, v):
-        """Ensure price is at least 1 to prevent division by zero."""
-        if v < 1:
+    def price_must_be_positive(cls, price):
+        """Reject prices below 1"""
+        if price < 1:
             raise ValueError("price must be at least 1")
-        return v
+        return price
 
 
 @app.post("/buy")
