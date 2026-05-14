@@ -18,8 +18,8 @@ router = APIRouter()
 @router.post("/user", response_model=UserResponse, status_code=201)
 def create_user(payload: UserCreate, db: Session = Depends(get_db)):
     """Create a new user with 10 starting tokens."""
-    existing = db.query(User).filter(User.email == payload.email).first()
-    if existing:
+    existing_user = db.query(User).filter(User.email == payload.email).first()
+    if existing_user:
         raise HTTPException(status_code=409, detail="Email already registered")
 
     user = User(
