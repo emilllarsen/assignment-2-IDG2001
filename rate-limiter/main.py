@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-# In-memory storage: {user_id: [list of datetime timestamps]}
+# stores a list of request timestamps per user
 request_log = {}
 
 
