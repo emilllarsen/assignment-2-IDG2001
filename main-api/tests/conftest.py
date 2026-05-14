@@ -6,6 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.database import Base, get_db
+from app.models.olympic_event import OlympicEvent
 from main import app
 
 TEST_ENGINE = create_engine(
@@ -29,6 +30,24 @@ app.dependency_overrides[get_db] = override_get_db
 @pytest.fixture(autouse=True)
 def setup_db():
     Base.metadata.create_all(bind=TEST_ENGINE)
+    db = TestSession()
+    db.add(OlympicEvent(
+        name="Usain Bolt", sex="M", age=21.0, noc="JAM",
+        sport="Athletics", event="100 metres", year=2008,
+        season="Summer", city="Beijing", medal="Gold",
+    ))
+    db.add(OlympicEvent(
+        name="Usain Bolt", sex="M", age=25.0, noc="JAM",
+        sport="Athletics", event="100 metres", year=2012,
+        season="Summer", city="London", medal="Gold",
+    ))
+    db.add(OlympicEvent(
+        name="Test Athlete", sex="F", age=22.0, noc="NOR",
+        sport="Skiing", event="Downhill", year=2018,
+        season="Winter", city="Pyeongchang", medal="Silver",
+    ))
+    db.commit()
+    db.close()
     yield
     Base.metadata.drop_all(bind=TEST_ENGINE)
 
