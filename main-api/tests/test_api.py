@@ -36,7 +36,9 @@ class TestUsers:
 
 
 class TestTokens:
-    # this worked in assignment 1, endpoint changed in assignment 2 to use token shop so it needs a running container
+    # this worked in assignment 1, endpoint changed in assignment 2 to use token shop
+    # so it needs a running container
+    #
     # def test_add_tokens(self, client):
     #     create_response = client.post("/v2/user", json={
     #         "email": "token@test.com", "password": "secret123",
@@ -67,7 +69,8 @@ class TestTokens:
         for _ in range(10):  # use all 10 tokens
             client.get("/v2/country/JAM", headers={"X-User-Id": user_id})
 
-        response = client.get("/v2/country/JAM", headers={"X-User-Id": user_id})  # 11th call, no tokens left
+        # 11th call, no tokens left
+        response = client.get("/v2/country/JAM", headers={"X-User-Id": user_id})
         assert response.status_code == 403
 
 
