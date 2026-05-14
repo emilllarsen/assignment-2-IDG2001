@@ -42,9 +42,9 @@ def setup_db():
         season="Summer", city="London", medal="Gold",
     ))
     db.add(OlympicEvent(
-        name="Test Athlete", sex="F", age=22.0, noc="NOR",
-        sport="Skiing", event="Downhill", year=2018,
-        season="Winter", city="Pyeongchang", medal="Silver",
+        name="Petter Northug", sex="M", age=24.0, noc="NOR",
+        sport="Skiing", event="50 km", year=2010,
+        season="Winter", city="Vancouver", medal="Gold",
     ))
     db.commit()
     db.close()
