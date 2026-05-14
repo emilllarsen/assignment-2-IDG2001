@@ -2,5 +2,7 @@
 __pycache__/
 *.pyc
 *.db
+.mypy_cache/
+.pytest_cache/
 md-formatted-lectures
 md-formatted-exams
