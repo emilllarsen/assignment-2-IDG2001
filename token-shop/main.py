@@ -85,8 +85,6 @@ def get_price():
 @app.post("/price")
 def set_price(payload: PriceUpdate):
     """Admin endpoint to update the token price."""
-    if payload.price < 1:
-        raise HTTPException(status_code=422, detail="price must be at least 1")
     global token_price
     token_price = payload.price
     return {"price": token_price}

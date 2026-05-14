@@ -21,17 +21,6 @@ class UserResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class TokenAdd(BaseModel):
-    user_id: str
-    amount: int
-
-
-class TokenResponse(BaseModel):
-    user_id: str
-    tokens: int
-    message: str
-
-
 class TokenRedeem(BaseModel):
     user_id: str
     code: str
