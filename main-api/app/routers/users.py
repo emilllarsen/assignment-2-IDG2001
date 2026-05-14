@@ -13,13 +13,15 @@ def hash_password(password: str) -> str:
     """Hash a password using SHA-256."""
     return hashlib.sha256(password.encode()).hexdigest()
 
+
 router = APIRouter()
 
 
 @router.post("/user", response_model=UserResponse, status_code=201)
 def create_user(payload: UserCreate, db: Session = Depends(get_db)):
     """Register a new user. New users start with 10 tokens."""
-    existing_user = db.query(User).filter(User.email == payload.email).first()  #check before insert so we get a proper error
+    # check before insert so we get a proper error
+    existing_user = db.query(User).filter(User.email == payload.email).first()
     if existing_user:
         raise HTTPException(status_code=409, detail="Email already registered")
 
@@ -66,7 +68,7 @@ def update_user(
 
     try:
         db.commit()
-    except IntegrityError:  #two requests at same time could both pass the check above
+    except IntegrityError:  # two requests at same time could both pass the check above
         db.rollback()
         raise HTTPException(status_code=409, detail="Email already registered")
     db.refresh(user)
