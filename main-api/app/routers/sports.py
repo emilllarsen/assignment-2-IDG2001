@@ -54,16 +54,15 @@ def get_sport(
         raise HTTPException(status_code=404, detail="Sport not found")
 
     deduct_token(user, db)
-    results = [
-        {
+    results = []
+    for record in matching_records:
+        results.append({
             "name": record.name,
             "event": record.event,
             "year": record.year,
             "noc": record.noc,
             "medal": record.medal,
-        }
-        for record in matching_records
-    ]
+        })
 
     data = {
         "sport": sport_name.replace("-", " ").title(),
