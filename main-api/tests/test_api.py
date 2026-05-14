@@ -39,15 +39,18 @@ class TestUsers:
 
 
 class TestTokens:
-    def test_add_tokens(self, client):
-        create = client.post("/v2/user", json={
-            "email": "token@test.com", "password": "secret123",
-        })
-        user_id = create.json()["id"]
-        resp = client.post("/v2/tokens", json={
-            "user_id": user_id, "amount": 5,
-        })
-        assert resp.json()["tokens"] == 15
+    # This test was for the assignment-1 version of POST /tokens which directly
+    # added tokens via {user_id, amount}. In assignment 2 this endpoint changed
+    # to the token-shop redemption flow and requires a live token-shop container.
+    # def test_add_tokens(self, client):
+    #     create = client.post("/v2/user", json={
+    #         "email": "token@test.com", "password": "secret123",
+    #     })
+    #     user_id = create.json()["id"]
+    #     resp = client.post("/v2/tokens", json={
+    #         "user_id": user_id, "amount": 5,
+    #     })
+    #     assert resp.json()["tokens"] == 15
 
     def test_token_consumption(self, client):
         create = client.post("/v2/user", json={
