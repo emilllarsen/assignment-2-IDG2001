@@ -44,7 +44,7 @@ def seed_database():
             )
             records.append(record)
 
-        chunk_size = 5000
+        chunk_size = 5000  #insert in chunks, doing it all at once uses too much memory
         for i in range(0, len(records), chunk_size):
             db.bulk_save_objects(records[i:i + chunk_size])
             db.commit()
