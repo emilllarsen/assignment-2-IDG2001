@@ -1,41 +1,38 @@
-"""API endpoint integration tests."""
-
-
 class TestUsers:
     def test_create_user(self, client):
-        resp = client.post("/v2/user", json={
+        response = client.post("/v2/user", json={
             "email": "test@example.com",
             "password": "secret123",
         })
-        assert resp.status_code == 201
-        assert resp.json()["email"] == "test@example.com"
-        assert resp.json()["tokens"] == 10
+        assert response.status_code == 201
+        assert response.json()["email"] == "test@example.com"
+        assert response.json()["tokens"] == 10
 
     def test_duplicate_user(self, client):
         client.post("/v2/user", json={
             "email": "dupe@test.com", "password": "secret123",
         })
-        resp = client.post("/v2/user", json={
+        response = client.post("/v2/user", json={
             "email": "dupe@test.com", "password": "other456",
         })
-        assert resp.status_code == 409
+        assert response.status_code == 409
 
     def test_get_user(self, client):
-        create = client.post("/v2/user", json={
+        create_response = client.post("/v2/user", json={
             "email": "find@test.com", "password": "secret123",
         })
-        user_id = create.json()["id"]
-        resp = client.get(f"/v2/user/{user_id}")
-        assert resp.status_code == 200
-        assert resp.json()["email"] == "find@test.com"
+        user_id = create_response.json()["id"]
+        response = client.get(f"/v2/user/{user_id}")
+        assert response.status_code == 200
+        assert response.json()["email"] == "find@test.com"
 
     def test_delete_user(self, client):
-        create = client.post("/v2/user", json={
+        create_response = client.post("/v2/user", json={
             "email": "delete@test.com", "password": "secret123",
         })
-        user_id = create.json()["id"]
-        resp = client.delete(f"/v2/user/{user_id}")
-        assert resp.status_code == 204
+        user_id = create_response.json()["id"]
+        response = client.delete(f"/v2/user/{user_id}")
+        assert response.status_code == 204
 
 
 class TestTokens:
@@ -43,37 +40,37 @@ class TestTokens:
     # added tokens via {user_id, amount}. In assignment 2 this endpoint changed
     # to the token-shop redemption flow and requires a live token-shop container.
     # def test_add_tokens(self, client):
-    #     create = client.post("/v2/user", json={
+    #     create_response = client.post("/v2/user", json={
     #         "email": "token@test.com", "password": "secret123",
     #     })
-    #     user_id = create.json()["id"]
-    #     resp = client.post("/v2/tokens", json={
+    #     user_id = create_response.json()["id"]
+    #     response = client.post("/v2/tokens", json={
     #         "user_id": user_id, "amount": 5,
     #     })
-    #     assert resp.json()["tokens"] == 15
+    #     assert response.json()["tokens"] == 15
 
     def test_token_consumption(self, client):
-        create = client.post("/v2/user", json={
+        create_response = client.post("/v2/user", json={
             "email": "consume@test.com", "password": "secret123",
         })
-        user_id = create.json()["id"]
+        user_id = create_response.json()["id"]
 
         client.get("/v2/country/JAM", headers={"X-User-Id": user_id})
 
-        resp = client.get(f"/v2/user/{user_id}")
-        assert resp.json()["tokens"] == 9
+        response = client.get(f"/v2/user/{user_id}")
+        assert response.json()["tokens"] == 9
 
     def test_no_tokens_returns_403(self, client):
-        create = client.post("/v2/user", json={
+        create_response = client.post("/v2/user", json={
             "email": "broke@test.com", "password": "secret123",
         })
-        user_id = create.json()["id"]
+        user_id = create_response.json()["id"]
 
         for _ in range(10):
             client.get("/v2/country/JAM", headers={"X-User-Id": user_id})
 
-        resp = client.get("/v2/country/JAM", headers={"X-User-Id": user_id})
-        assert resp.status_code == 403
+        response = client.get("/v2/country/JAM", headers={"X-User-Id": user_id})
+        assert response.status_code == 403
 
 
 class TestDataEndpoints:
